@@ -75,7 +75,7 @@ class CashbackCalculatorImpl : CashbackCalculator {
                     lowerName == "олег"                                               -> BigDecimal(7)
                     lowerName.startsWith(getMonthLetter())                            -> BigDecimal(5)
                     lowerName.startsWith(getMonthLetter(1L))
-                            || lowerName.startsWith(getMonthLetter(-1L)) -> BigDecimal(3)
+                            || lowerName.startsWith(getMonthLetter(-1L))              -> BigDecimal(3)
                     else                                                              -> BigDecimal(2)
                 }
                 cashback = cashback.addBonus(transactSum, percent)
