@@ -46,9 +46,9 @@ class CashbackCalculatorImpl : CashbackCalculator {
         }
         cashback += extraBonus(this)
 
-        // checks if the total cashback has exceeded 3000
-        if ((BigDecimal(cashbackTotalValue) + cashback) > BigDecimal(3000)) {
-            cashback = BigDecimal(3000) - BigDecimal(cashbackTotalValue)
+        // checks if the total cashback has exceeded MAX_CASH_BACK
+        if ((BigDecimal(cashbackTotalValue) + cashback) > BigDecimal(MAX_CASH_BACK)) {
+            cashback = BigDecimal(MAX_CASH_BACK) - BigDecimal(cashbackTotalValue)
         }
 
         return cashback.setScale(2, RoundingMode.CEILING).toDouble()
@@ -84,23 +84,24 @@ class CashbackCalculatorImpl : CashbackCalculator {
         val lowerName = firstName.toLowerCase()
 
         val percent = when {
-            lowerName == BEER_FIRSTNAME && lastName.toLowerCase() == BEER_LASTNAME -> BigDecimal(PERCENT_BEER_FIRST_LAST_NAME)
-            lowerName == BEER_FIRSTNAME                                            -> BigDecimal(PERCENT_BEER_FIRSTNAME)
-            lowerName.startsWith(getMonthLetter())                                 -> BigDecimal(PERCENT_BEER_MONTH_LETTER)
+            lowerName == BEER_FIRSTNAME
+                    && lastName.toLowerCase() == BEER_LASTNAME   -> BigDecimal(PERCENT_BEER_FIRST_LAST_NAME)
+            lowerName == BEER_FIRSTNAME                          -> BigDecimal(PERCENT_BEER_FIRSTNAME)
+            lowerName.startsWith(getMonthLetter())               -> BigDecimal(PERCENT_BEER_MONTH_LETTER)
             lowerName.startsWith(getMonthLetter(1L))
-                    || lowerName.startsWith(getMonthLetter(-1L))                   -> BigDecimal(PERCENT_BEER_PREV_NEXT_MONTH_LETTER)
-            else                                                                   -> BigDecimal(PERCENT_BEER_DEFAULT)
+                    || lowerName.startsWith(getMonthLetter(-1L)) -> BigDecimal(PERCENT_BEER_PREV_NEXT_MONTH_LETTER)
+            else                                                 -> BigDecimal(PERCENT_BEER_DEFAULT)
         }
         return cashback.addBonus(transactSum, percent)
     }
 
-    private fun extraBonus (transactionInfo: TransactionInfo): BigDecimal {
+    private fun extraBonus (transactionInfo: TransactionInfo): BigDecimal = with(transactionInfo) {
         var cashback = BigDecimal.ZERO
-        with(transactionInfo) {
-            if (transactionSum == EXTRA_BONUS_TRIPLE_SIX || transactionSum % EXTRA_BONUS_TRIPLE_SIX == 0.0) {
-                cashback += BigDecimal(EXTRA_BONUS_TRIPLE_SIX).divide(BigDecimal(100))
-            }
+
+        if (transactionSum == EXTRA_BONUS_TRIPLE_SIX || transactionSum % EXTRA_BONUS_TRIPLE_SIX == 0.0) {
+            cashback += BigDecimal(EXTRA_BONUS_TRIPLE_SIX).divide(BigDecimal(100))
         }
+
         return cashback
     }
 
