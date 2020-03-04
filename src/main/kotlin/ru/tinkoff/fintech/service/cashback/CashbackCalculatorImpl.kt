@@ -37,21 +37,35 @@ class CashbackCalculatorImpl : CashbackCalculator {
     private val addBonus: BigDecimal.(transactionSum: BigDecimal, percent: BigDecimal) -> BigDecimal =
         { transactionSum, percent -> this + (transactionSum * percent).divide(BigDecimal(100)) }
 
-    override fun calculateCashback(transactionInfo: TransactionInfo): Double = with(transactionInfo) {
-        var cashback = when (loyaltyProgramName) {
-            LOYALTY_PROGRAM_BLACK -> loyaltyBlack(this)
-            LOYALTY_PROGRAM_ALL   -> loyaltyAll(this)
-            LOYALTY_PROGRAM_BEER  -> loyaltyBeer(this)
-            else                  -> BigDecimal.ZERO
-        }
-        cashback += extraBonus(this)
-
-        // checks if the total cashback has exceeded MAX_CASH_BACK
-        if ((BigDecimal(cashbackTotalValue) + cashback) > BigDecimal(MAX_CASH_BACK)) {
-            cashback = BigDecimal(MAX_CASH_BACK) - BigDecimal(cashbackTotalValue)
-        }
+    override fun calculateCashback(transactionInfo: TransactionInfo): Double {
+        var cashback = calculateCashbackBody(transactionInfo)
+        cashback += calculateCashbackBonus(transactionInfo)
+        cashback = trimToMaxCashbackIfMore(cashback, BigDecimal(transactionInfo.cashbackTotalValue))
 
         return cashback.setScale(2, RoundingMode.CEILING).toDouble()
+    }
+
+    private fun calculateCashbackBody(transactionInfo: TransactionInfo): BigDecimal =
+        when (transactionInfo.loyaltyProgramName) {
+            LOYALTY_PROGRAM_BLACK -> loyaltyBlack(transactionInfo)
+            LOYALTY_PROGRAM_ALL   -> loyaltyAll(transactionInfo)
+            LOYALTY_PROGRAM_BEER  -> loyaltyBeer(transactionInfo)
+            else                  -> BigDecimal.ZERO
+        }
+
+    private fun calculateCashbackBonus(transactionInfo: TransactionInfo): BigDecimal = with(transactionInfo) {
+        var cashback = BigDecimal.ZERO
+
+        if (transactionSum == EXTRA_BONUS_TRIPLE_SIX || transactionSum % EXTRA_BONUS_TRIPLE_SIX == 0.0) {
+            cashback += BigDecimal(EXTRA_BONUS_TRIPLE_SIX).divide(BigDecimal(100))
+        }
+
+        return cashback
+    }
+
+    private fun trimToMaxCashbackIfMore(cashback: BigDecimal, cashbackTotalValue: BigDecimal): BigDecimal {
+        val maxCashback = BigDecimal(MAX_CASH_BACK)
+        return if ((cashbackTotalValue + cashback) > maxCashback) maxCashback - cashbackTotalValue else cashback
     }
 
     private fun loyaltyBlack(transactionInfo: TransactionInfo): BigDecimal {
@@ -88,21 +102,11 @@ class CashbackCalculatorImpl : CashbackCalculator {
                     && lastName.toLowerCase() == BEER_LASTNAME   -> BigDecimal(PERCENT_BEER_FIRST_LAST_NAME)
             lowerName == BEER_FIRSTNAME                          -> BigDecimal(PERCENT_BEER_FIRSTNAME)
             lowerName.startsWith(getMonthLetter())               -> BigDecimal(PERCENT_BEER_MONTH_LETTER)
-            lowerName.startsWith(getMonthLetter(1L))
-                    || lowerName.startsWith(getMonthLetter(-1L)) -> BigDecimal(PERCENT_BEER_PREV_NEXT_MONTH_LETTER)
+            lowerName.startsWith(getMonthLetter(1L))             -> BigDecimal(PERCENT_BEER_PREV_NEXT_MONTH_LETTER)
+            lowerName.startsWith(getMonthLetter(-1L))            -> BigDecimal(PERCENT_BEER_PREV_NEXT_MONTH_LETTER)
             else                                                 -> BigDecimal(PERCENT_BEER_DEFAULT)
         }
         return cashback.addBonus(transactSum, percent)
-    }
-
-    private fun extraBonus (transactionInfo: TransactionInfo): BigDecimal = with(transactionInfo) {
-        var cashback = BigDecimal.ZERO
-
-        if (transactionSum == EXTRA_BONUS_TRIPLE_SIX || transactionSum % EXTRA_BONUS_TRIPLE_SIX == 0.0) {
-            cashback += BigDecimal(EXTRA_BONUS_TRIPLE_SIX).divide(BigDecimal(100))
-        }
-
-        return cashback
     }
 
     private fun getMonthLetter(monthsToAdd: Long = 0L): String {
