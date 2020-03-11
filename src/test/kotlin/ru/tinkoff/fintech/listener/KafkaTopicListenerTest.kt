@@ -39,7 +39,7 @@ private const val RECEIVER_TOPIC = "testTopic"
 @RunWith(SpringRunner::class)
 @SpringBootTest
 @DirtiesContext
-internal class MyTestClass {
+internal class KafkaTopicListenerTest {
 
     @Value("classpath:/transaction.json")
     lateinit var transactionResource: Resource
