@@ -15,7 +15,7 @@ class CardServiceClientImpl(
 
     override fun getCard(id: String): Card {
         val res = restClient.getForEntity("$url/$id", Card::class.java)
-        if (res.statusCode.is2xxSuccessful) {
+        if (!res.statusCode.is2xxSuccessful) {
             throw RestClientException("Incorrect status: ${res.statusCodeValue}")
         }
         return res.body!!

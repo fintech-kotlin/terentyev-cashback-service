@@ -30,8 +30,8 @@ class TransactionServiceImpl(
     }
 
     override fun handle(transaction: Transaction) {
-        if (transaction.mccCode != null) {
-            log.info { "mmcCode is NULL: ${transaction.toString()} " }
+        if (transaction.mccCode == null) {
+            log.info { "mccCode is NULL: $transaction" }
             return
         }
         try {

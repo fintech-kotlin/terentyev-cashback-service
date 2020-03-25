@@ -9,13 +9,13 @@ spring:
 
   kafka:
     consumer:
-      client-id: terentyev-cashback-service
       bootstrap-servers: 40.69.78.245:19092
       group-id: cashback
       topic: transactions
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         request.timeout.ms: 7000
+        spring.json.value.default.type: ru.tinkoff.fintech.model.Transaction
 
 rest.api:
   card: http://13.79.17.165/card-service/api/v1/card/
