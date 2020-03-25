@@ -1,5 +1,6 @@
 package ru.tinkoff.fintech.service.transaction
 
+import kotlinx.coroutines.*
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -34,26 +35,40 @@ class TransactionServiceImpl(
             log.info { "mccCode is NULL: $transaction" }
             return
         }
-        try {
-            val card = cardServiceClient.getCard(transaction.cardNumber)
-            val client = clientService.getClient(card.client)
-            val loyaltyProgram = loyaltyServiceClient.getLoyaltyProgram(card.loyaltyProgram)
+        runBlocking(Dispatchers.IO) {
+            try {
+                val card = cardServiceClient.getCard(transaction.cardNumber)
 
-            val firstMonthDay = LocalDate.from(transaction.time).withDayOfMonth(1).atStartOfDay()
-            val payments = loyaltyPaymentRepository.findAllByCardIdAndSignAndDateTimeAfter(card.id, serviceSign, firstMonthDay)
+                val clientDefer = async { clientService.getClient(card.client) }
+                val loyaltyProgramDefer = async { loyaltyServiceClient.getLoyaltyProgram(card.loyaltyProgram) }
+                val monthSumDefer = async {
+                    val firstMonthDay = LocalDate.from(transaction.time).withDayOfMonth(1).atStartOfDay()
+                    val payments = loyaltyPaymentRepository.findAllByCardIdAndSignAndDateTimeAfter(
+                        card.id,
+                        serviceSign,
+                        firstMonthDay
+                    )
+                    payments.fold(0.0, { acc, entity -> acc + entity.value })
+                }
 
-            val monthSum = payments.fold(0.0, { acc, entity -> acc + entity.value } )
+                val client = clientDefer.await()
+                val loyaltyProgram = loyaltyProgramDefer.await()
+                val monthSum = monthSumDefer.await()
 
-            val transactionInfo = createTransactionInfo(loyaltyProgram, transaction, client, monthSum)
-            val cashback = cashbackCalculator.calculateCashback(transactionInfo)
+                val transactionInfo = createTransactionInfo(loyaltyProgram, transaction, client, monthSum)
+                val cashback = cashbackCalculator.calculateCashback(transactionInfo)
 
-            saveLoyaltyPayment(card, cashback, transaction)
+                launch {
+                    saveLoyaltyPayment(card, cashback, transaction)
+                }
 
-            val message = createNotificationMessage(transaction, transactionInfo, cashback)
-            notificationService.sendNotification(client.id, message)
-
-        } catch (e : Exception) {
-            log.error("Call service error ", e)
+                launch {
+                    val message = createNotificationMessage(transaction, transactionInfo, cashback)
+                    notificationService.sendNotification(client.id, message)
+                }
+            } catch (e: Exception) {
+                log.error("Call service error ", e)
+            }
         }
     }
 
