@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:db
+    username: sa
+    password: sa
+
+  kafka:
+    consumer:
+      bootstrapServers: ${spring.embedded.kafka.brokers}
+      groupId: testGroup
+      topic: testTopic
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        request.timeout.ms: 7000
+        spring.json.value.default.type: ru.tinkoff.fintech.model.Transaction
+
+rest.api:
+  card: http://localhost/card-service/api/v1/card/
+  client: http://localhost/client-service/api/v1/client/
+  loyalty: http://localhost/loyalty-service/api/v1/program/
+  notification: http://localhost/notification-service/api/v2/client/
+
+payment.sign: terentyev-cashback-service

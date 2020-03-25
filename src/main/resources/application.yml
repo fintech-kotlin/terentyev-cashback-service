@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: ****
+    username: ****
+    password: ****
+
+  jpa:
+    show-sql: true
+
+  kafka:
+    consumer:
+      bootstrap-servers: 40.69.78.245:19092
+      group-id: cashback
+      topic: transactions
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        request.timeout.ms: 7000
+        spring.json.value.default.type: ru.tinkoff.fintech.model.Transaction
+
+rest.api:
+  card: http://****/card-service/api/v1/card/
+  client: http://****/client-service/api/v1/client/
+  loyalty: http://****/loyalty-service/api/v1/program/
+  notification: http://****/notification-service/api/v2/client/
+
+payment.sign: terentyev-cashback-service
