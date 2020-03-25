@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://tinkoff-kotlin-psql-1.postgres.database.azure.com:5432/fintech?currentSchema=cashback
+    username: kotlin_master@tinkoff-kotlin-psql-1
+    password: koklin
+
+  jpa:
+    show-sql: true
+
+  kafka:
+    consumer:
+      bootstrap-servers: 40.69.78.245:19092
+      group-id: cashback
+      topic: transactions
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        request.timeout.ms: 7000
+        spring.json.value.default.type: ru.tinkoff.fintech.model.Transaction
+
+rest.api:
+  card: http://13.79.17.165/card-service/api/v1/card/
+  client: http://13.79.17.165/client-service/api/v1/client/
+  loyalty: http://13.79.17.165/loyalty-service/api/v1/program/
+  notification: http://13.79.17.165/notification-service/api/v2/client/
+
+payment.sign: terentyev-cashback-service
