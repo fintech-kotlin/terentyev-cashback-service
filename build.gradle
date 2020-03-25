@@ -1,10 +1,10 @@
 plugins {
     id 'org.springframework.boot' version '2.1.0.RELEASE'
-    id 'org.jetbrains.kotlin.jvm' version '1.3.50'
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.3.50'
-    id "org.jetbrains.kotlin.plugin.jpa" version "1.3.50"
-    id 'org.jetbrains.kotlin.plugin.noarg' version '1.3.50'
-    id "org.jetbrains.kotlin.kapt" version "1.3.50"
+    id 'org.jetbrains.kotlin.jvm' version '1.3.70' // update version because of https://github.com/Kotlin/kotlinx.coroutines/issues/1879
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.3.70'
+    id "org.jetbrains.kotlin.plugin.jpa" version "1.3.70"
+    id 'org.jetbrains.kotlin.plugin.noarg' version '1.3.70'
+    id "org.jetbrains.kotlin.kapt" version "1.3.70"
     id 'org.hidetake.swagger.generator' version '2.18.1'
     id "io.spring.dependency-management" version "1.0.9.RELEASE"
 }
@@ -34,6 +34,7 @@ dependencyManagement {
 }
 
 dependencies {
+    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '1.3.5'
     implementation group: 'org.jetbrains.kotlin', name: 'kotlin-stdlib-jdk8'
     implementation group: 'org.jetbrains.kotlin', name: 'kotlin-reflect'
     implementation group: 'com.fasterxml.jackson.module', name: 'jackson-module-kotlin', version: '2.9.7'
